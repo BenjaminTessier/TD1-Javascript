@@ -1,0 +1,201 @@
+
+/*-------------------------------------------------
+
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+++++++++++++++ TD de JavaScript ++++++++++++++++++
+
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+//---------------partie 2 -------------------------*/
+
+function EventEmitter(){
+ // HashMap [ event -> [fn1, fn2, ...] ]
+ this.callbacks = {}; 
+}
+
+EventEmitter.prototype = {
+  on: function(event, fn){
+//regarder si event est une clé de this.callbacks*
+    if(!this.callbacks.hasOwnProperty(event)){
+		this.callbacks[event]= [];
+	}
+	this.callbacks[event].push(fn);
+	return this;
+  },
+  off: function(event, fn){
+//réinitialise cet EventEmitter
+		this.callbacks = {};
+		return this;
+  },
+  emit: function(event /*, args */){
+//récupérer tous les arguments sauf event dans un tableau
+    var args = Array.prototype.slice.call(arguments);
+		args.shift();
+	//regarder dans this.callbacks si event est présent et alors exécuter ses fonctions, sinon rien
+		if(this.callbacks.hasOwnProperty(event)){
+			this.callbacks[event].forEach(function(f){
+				f.apply(this, args);
+			})
+		}
+  }
+};
+
+
+var julien   = new EventEmitter();
+
+var fn = console.log.bind(console);
+
+julien.on("bonjour", fn)
+.on("au revoir", fn);
+
+julien.emit("bonjour",1);
+julien.emit("au revoir",2);
+
+julien.off();
+
+julien.emit("bonjour",1);
+julien.emit("au revoir",2);
+
+
+
+
+//---------------partie 3 -------------------------
+
+function EventEmitter(){
+ // HashMap [ event -> [fn1, fn2, ...] ]
+
+ this.callbacks = {once : false}; 
+}
+
+EventEmitter.prototype = {
+  on: function(event, fn){
+//regarder si event est une clé de this.callbacks*
+    if(!this.callbacks.hasOwnProperty(event)){
+    	this.callbacks[event]= [];
+		}
+	this.callbacks[event].push(fn);
+  },
+  once: function(event, fn){
+//si event est une propriété de this.callbacks alors en faire un tableau et ajouter à la fin fn
+    if(!this.callbacks.hasOwnProperty(event)){
+			this.callbacks[event]= [];
+			this.callbacks.once = true;
+		}
+		this.callbacks[event].push(fn);
+	},
+  off: function(event, fn){
+//si off n'a pas de paramètre, réinitialiser cet EventEmitter
+    if (event === undefined){
+			this.callbacks = {};
+		}
+		else{ // sinon supprimer uniquement l'event passé en paramètre
+			delete this.callbacks[event];
+		}
+  },
+  emit: function(event /*, args */){
+//récupérer tous les arguments sauf event dans un tableau
+    var args = Array.prototype.slice.call(arguments);
+		args.shift();
+	//regarder dans this.callbacks si event est présent et alors exécuter ses fonctions, sinon rien
+		if(this.callbacks.hasOwnProperty(event)){
+			this.callbacks[event].forEach(function(f){
+				f.apply(this, args);
+			})
+		}
+      if(this.callbacks.once === true){
+      	delete this.callbacks[event];
+      }
+    }
+};
+
+var julien = new EventEmitter();
+
+julien.on('bonjour',fn);
+julien.on('au revoir',fn);
+julien.off('bonjour',fn);
+
+julien.emit('bonjour',1);
+julien.emit('au revoir',2);
+
+julien.once('bonjour', function(){console.log("should only be printed once");});
+julien.emit('bonjour');
+julien.emit('bonjour');
+
+
+
+//---------------partie 4 -------------------------
+
+function EventEmitter(){
+ // HashMap [ event -> [fn1, fn2, ...] ]
+ this.callbacks = {once : 0}; 
+}
+
+EventEmitter.prototype = {
+  on: function(event, fn){
+//si event est une propriété de this.callbacks alors en faire un tableau et ajouter à la fin fn
+    if(!this.callbacks.hasOwnProperty(event)){
+		this.callbacks[event]= [];
+		}
+		this.callbacks[event].push(fn);
+	},
+  once: function(event, fn){
+//si event est une propriété de this.callbacks alors en faire un tableau et ajouter à la fin fn
+    if(!this.callbacks.hasOwnProperty(event)){
+    	this.callbacks[event]= [];
+			this.callbacks.once = 1;
+		}
+		this.callbacks[event].push(fn);
+	},
+  times: function(event, times, fn){
+//si event est une propriété de this.callbacks alors en faire un tableau et ajouter à la fin fn
+		if(!this.callbacks.hasOwnProperty(event)){
+			this.callbacks[event]= [];
+			if(isNaN(times)){
+				console.log("please, be smart and write a number");
+			}
+	    else{
+        this.callbacks.once = times;
+      }
+		}
+		this.callbacks[event].push(fn);
+	},
+  off: function(event, fn){
+//si off n'a pas de paramètre, réinitialiser cet EventEmitter
+		if (event === undefined){
+			this.callbacks = {once : false};
+		}
+		else{ // sinon supprimer uniquement l'event passé en paramètre
+			delete this.callbacks[event];
+		}
+  },
+  emit: function(event /*, args */){
+//récupérer tous les arguments sauf event dans un tableau
+		var args = Array.prototype.slice.call(arguments);
+		args.shift();
+		//regarder dans this.callbacks si event est présent et alors exécuter ses fonctions, sinon rien
+		if(this.callbacks.hasOwnProperty(event)){
+			this.callbacks[event].forEach(function(f){
+				f.apply(this, args);
+			})
+		}
+    if(this.callbacks.once == 1){ // si le compteur a atteint 1, supprimer l'event
+    	delete this.callbacks[event];
+    }
+    else if(this.callbacks.once > 1){ // enlever 1 au compteur du times
+    	this.callbacks.once -= 1;
+    }
+  }	
+};
+
+var julien = new EventEmitter();
+
+var fn = console.log.bind(console);
+
+
+julien.times("event1", 2, fn);
+julien.emit("event1", "hello should be print");
+julien.emit("event1", "world shoud be print");
+julien.emit("event1", "you shall not pass !!!!");
